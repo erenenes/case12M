@@ -1,0 +1,78 @@
+@using case12M.Models
+
+@(Html.DevExtreme().Form<case12M.Models.FilterModel>()
+    .ColCount(3)
+    .Items(items => {
+
+        items.AddSimpleFor(m => m.MalKodu).Editor(e=>e
+        .SelectBox()
+        .ID("MalKodu")
+        .DisplayExpr("MalKodu")
+        .DataSource(d => d.Mvc().Controller("SampleData").LoadAction("GetMalAdiAsync").Key("ID"))
+        );
+
+        items.AddSimpleFor(m => m.BaslangicTarih).Editor(e=>e
+        .DateBox()
+        .ID("BaslangicTarih")
+        .Value("2000-01-01"));
+
+        items.AddSimpleFor(m => m.BitisTarih).Editor(e => e
+        .DateBox()
+        .ID("BitisTarih")
+        .Value("2021-12-30")); ;
+
+        items.AddButton()
+        .HorizontalAlignment(HorizontalAlignment.Left)
+                    .ButtonOptions(b => b.Text("Filtrele")
+                        .Type(ButtonType.Success)
+                        .UseSubmitBehavior(true)
+                        .OnClick("refreshGrid"));
+    })
+)
+@(Html.DevExtreme().DataGrid<Ekstre>()
+    .ID("targetDataGrid")
+        .ShowBorders(true)
+        .DataSource(d => d.Mvc().Controller("SampleData").LoadAction("Get").LoadParams(new { BaslangicTarih = new JS("getDateBoxValue"), BitisTarih = new JS("getDateBoxSecondValue"),MalKodu= new JS("getSelectBoxValue") }).Key("SiraNo"))
+        .Export(e => e.Enabled(true).AllowExportSelectedData(true))
+        .Columns(columns => {
+            columns.AddFor(m => m.SiraNo);
+            columns.AddFor(m => m.IslemTur);
+            columns.AddFor(m => m.EvrakNo);
+            columns.AddFor(m => m.Tarih);
+            columns.AddFor(m => m.GirisMiktar);
+            columns.AddFor(m => m.CikisMiktar);
+            columns.AddFor(m => m.Stok);
+        })
+        .Paging(p => p.PageSize(10))
+        .FilterRow(f => f.Visible(true))
+        .HeaderFilter(f => f.Visible(true))
+        .GroupPanel(p => p.Visible(true))
+        .Grouping(g => g.AutoExpandAll(false))
+        .RemoteOperations(true)
+        .Summary(s => s
+            .TotalItems(totalItems => {
+                totalItems.AddFor(m => m.Stok).SummaryType(SummaryType.Count);
+            })
+            .GroupItems(groupItems => {
+                groupItems.Add().SummaryType(SummaryType.Count);
+            })
+        )
+    )
+
+<script type="text/javascript">
+    function getDateBoxValue() {
+        return $("#BaslangicTarih").dxDateBox("option", "text");
+    }
+    function getDateBoxSecondValue() {
+        return $("#BitisTarih").dxDateBox("option", "text");
+    }
+    function getSelectBoxValue() {
+        if ($('#MalKodu').dxSelectBox('instance').option('value') != null) {
+            return $('#MalKodu').dxSelectBox('instance').option('value').MalKodu;
+        }
+    }
+
+    function refreshGrid() {
+        $("#targetDataGrid").dxDataGrid("refresh");
+    }
+</script>
